@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="편의점 디저트·간편식 한줄 리뷰 프로토타입">
+<title>편의점 한입 · 디저트·간편식 리뷰</title>
+<style>
+  :root{
+    --bg:#F3F4F7;
+    --card:#FFFFFF;
+    --ink:#1A1C20;
+    --ink2:#3B3F46;
+    --muted:#767C88;
+    --line:#E7E9EF;
+    --accent:#FF6A2B;
+    --accent-soft:#FFF0E8;
+    --star:#FFB020;
+    --good:#12A05C;
+    --danger:#E5484D;
+    --radius:18px;
+    --shadow:0 1px 2px rgba(20,22,28,.05), 0 8px 22px rgba(20,22,28,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:#E9EBF0;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;align-items:stretch;
+    font-size:15px;line-height:1.45;
+  }
+  @media (min-width:480px){
+    body{align-items:center;padding:14px 0}
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+  input,textarea,select{font:inherit;color:inherit}
+  .phone{
+    position:relative;width:100%;max-width:430px;height:100dvh;background:var(--bg);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  @media (min-width:480px){
+    .phone{height:min(932px,calc(100dvh - 28px));border-radius:34px;box-shadow:0 26px 70px rgba(20,22,28,.25);border:1px solid #fff}
+  }
+
+  /* ── 헤더 ───────────────────────────── */
+  .topbar{
+    flex:0 0 auto;display:flex;align-items:center;gap:10px;
+    padding:14px 16px 12px;
+    background:linear-gradient(135deg,#FFF3EA 0%,#FFF9F4 45%,#F6EEFF 100%);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{
+    width:40px;height:40px;border-radius:13px;background:#fff;box-shadow:var(--shadow);
+    display:flex;align-items:center;justify-content:center;font-size:21px;
+  }
+  .brand h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.4px}
+  .brand p{margin:0;font-size:11.5px;color:var(--muted);letter-spacing:-.2px}
+  .iconbtn{
+    margin-left:auto;width:32px;height:32px;border-radius:50%;background:#fff;
+    border:1px solid var(--line);color:var(--muted);font-size:14px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ── 검색·탭·정렬 ───────────────────── */
+  .head{flex:0 0 auto;background:var(--bg);padding:10px 14px 0}
+  .searchwrap{position:relative}
+  .searchwrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:#9AA0AC}
+  #search{
+    width:100%;height:42px;border-radius:13px;border:1px solid var(--line);background:#fff;
+    padding:0 14px 0 36px;font-size:14px;outline:none;letter-spacing:-.2px;
+  }
+  #search:focus{border-color:#FFC7A8;box-shadow:0 0 0 3px #FFEDE2}
+  .tabs{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:0 0 auto;padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);
+    font-size:13px;font-weight:700;color:var(--muted);letter-spacing:-.2px;white-space:nowrap;
+  }
+  .tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  .sortrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 2px 9px}
+  .count{font-size:12px;color:var(--muted);font-weight:600}
+  #sort{
+    height:30px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    font-size:12px;font-weight:700;color:var(--ink2);padding:0 8px;outline:none;
+  }
+
+  /* ── 리스트 ─────────────────────────── */
+  .scroll{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:0 14px 96px}
+  .notice{
+    display:flex;gap:8px;align-items:flex-start;
+    background:#FFF8E6;border:1px solid #F6E3B4;border-radius:12px;
+    padding:9px 11px;margin:0 0 10px;font-size:11.5px;color:#7A5B00;line-height:1.4;letter-spacing:-.2px;
+  }
+  .notice b{font-weight:800}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .card{
+    position:relative;display:flex;gap:12px;width:100%;text-align:left;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px;box-shadow:var(--shadow);
+  }
+  .card:active{transform:scale(.995)}
+  .thumb{
+    flex:0 0 74px;height:74px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:34px;background:linear-gradient(140deg,#FFF3E8,#F4ECFF);
+  }
+  .cardbody{flex:1 1 auto;min-width:0}
+  .cardtop{display:flex;align-items:center;gap:6px}
+  .badge{
+    font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:6px;letter-spacing:-.1px;
+    white-space:nowrap;
+  }
+  .b-CU{background:#F3E7FA;color:#6E2B8E}
+  .b-GS25{background:#E3F2FC;color:#0B7FBF}
+  .b-7ELEVEN{background:#E6F5EF;color:#0A7A54;box-shadow:inset -3px 0 0 #F07800}
+  .b-EMART24{background:#FFF6D6;color:#7E6200}
+  .cardname{
+    font-size:14.5px;font-weight:800;letter-spacing:-.45px;margin:4px 0 2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .meta{font-size:11.5px;color:var(--muted);letter-spacing:-.2px}
+  .meta .won{color:var(--ink2);font-weight:800}
+  .scoreline{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:12px;font-weight:700}
+  .scoreline .st{color:var(--star)}
+  .scoreline .num{color:var(--ink);font-weight:800}
+  .scoreline .rev{color:var(--muted);font-weight:600;font-size:11px}
+  .ratepill{
+    margin-left:auto;flex:0 0 auto;font-size:10.5px;font-weight:800;color:var(--good);
+    background:#E9F8F0;border-radius:7px;padding:3px 6px;white-space:nowrap;
+  }
+  .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+  .tag{font-size:10.5px;color:#8A6A55;background:#FFF2E9;border-radius:6px;padding:2px 6px;font-weight:600}
+  .empty{padding:46px 10px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+  .foot{
+    margin:16px 2px 4px;font-size:11px;color:#9AA0AC;line-height:1.6;letter-spacing:-.2px;
+  }
+  .foot b{color:#7A828F}
+
+  /* ── 하단 고정 광고 ─────────────────── */
+  .adbar{
+    position:absolute;left:0;right:0;bottom:0;z-index:5;
+    padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(243,244,247,0) 0%,#F3F4F7 26%);
+  }
+  .ad{
+    position:relative;margin:0 auto;display:flex;align-items:center;justify-content:center;
+    border:1px dashed #D2D6DF;border-radius:10px;background:repeating-linear-gradient(45deg,#FAFBFC,#FAFBFC 9px,#F4F6F9 9px,#F4F6F9 18px);
+    color:#98A0AC;font-size:10.5px;font-weight:700;letter-spacing:-.1px;text-align:center;line-height:1.3;
+  }
+  .ad::before{
+    content:"AD";position:absolute;top:3px;left:4px;font-size:8px;font-weight:800;color:#B3B9C4;letter-spacing:.5px;
+  }
+  .ad-320x50{width:320px;max-width:100%;height:50px}
+  .ad-300x100{width:300px;max-width:100%;height:100px;margin:14px auto}
+
+  /* ── 상세 시트 ──────────────────────── */
+  .sheet{
+    position:absolute;inset:0;z-index:20;background:var(--bg);
+    display:flex;flex-direction:column;
+    transform:translateY(100%);transition:transform .26s cubic-bezier(.22,.68,.32,1);
+    visibility:hidden;
+  }
+  .sheet.open{transform:translateY(0);visibility:visible}
+  #write{z-index:30}
+  .sheettop{
+    flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 14px;
+    background:#fff;border-bottom:1px solid var(--line);
+  }
+  .sheettop .t{font-size:15px;font-weight:800;letter-spacing:-.4px}
+  .round{
+    width:34px;height:34px;border-radius:50%;background:#F4F5F8;display:flex;align-items:center;justify-content:center;
+    font-size:16px;color:var(--ink2);flex:0 0 auto;
+  }
+  .sheetbody{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:14px 14px 120px}
+  .hero{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;
+    box-shadow:var(--shadow);text-align:center;
+  }
+  .heroemoji{font-size:54px;line-height:1;margin-bottom:6px}
+  .hero .badge{font-size:11px}
+  .heroname{font-size:19px;font-weight:800;letter-spacing:-.6px;margin:7px 0 3px}
+  .herometa{font-size:12px;color:var(--muted);letter-spacing:-.2px}
+  .herometa .won{color:var(--ink);font-weight:800}
+  .herostats{display:flex;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .hstat{flex:1 1 0;text-align:center;border-right:1px solid var(--line)}
+  .hstat:last-child{border-right:0}
+  .hstat .v{font-size:17px;font-weight:800;letter-spacing:-.5px}
+  .hstat .v.st{color:var(--star)}
+  .hstat .v.gd{color:var(--good)}
+  .hstat .k{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:1px}
+  .hstat .v small{font-size:11px;color:var(--muted);font-weight:700;margin-left:1px}
+  @keyframes statpulse{0%{background:#FFF3E8}100%{background:transparent}}
+  .herostats.pulse{animation:statpulse 1.1s ease-out;border-radius:10px}
+
+  .sec{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+  .sec h3{margin:0 0 11px;font-size:13px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:6px}
+  .sec h3 .n{font-size:11px;font-weight:700;color:var(--muted)}
+  .bar{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .bar:last-child{margin-bottom:0}
+  .bar .lab{flex:0 0 62px;font-size:12px;color:var(--ink2);font-weight:700;letter-spacing:-.2px}
+  .track{flex:1 1 auto;height:8px;border-radius:99px;background:#EFF1F5;overflow:hidden}
+  .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#FFB072,#FF6A2B);transition:width .35s ease}
+  .bar .val{flex:0 0 26px;text-align:right;font-size:12px;font-weight:800;color:var(--ink2)}
+
+  .review{display:flex;gap:9px;padding:11px 0;border-top:1px solid #F0F2F6}
+  .review:first-of-type{border-top:0;padding-top:2px}
+  .avatar{
+    flex:0 0 30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#FFE6D6,#EADDFF);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#7A5B8E;
+  }
+  .rvbody{flex:1 1 auto;min-width:0}
+  .rvtop{display:flex;align-items:center;gap:6px}
+  .rvuser{font-size:12px;font-weight:800;letter-spacing:-.2px}
+  .mine{font-size:9.5px;font-weight:800;color:#6E2B8E;background:#F3E7FA;border-radius:5px;padding:1px 5px}
+  .rvd{font-size:10.5px;color:#A0A6B2;margin-left:auto}
+  .rvstars{font-size:11px;color:var(--star);letter-spacing:.5px}
+  .rvstars .off{color:#DDE1E8}
+  .rvbuy{font-size:9.5px;font-weight:800;color:var(--good);background:#E9F8F0;border-radius:5px;padding:1px 5px}
+  .rvbuy.no{color:#8A8F99;background:#F1F3F7}
+  .rvtext{margin:4px 0 6px;font-size:13px;color:var(--ink2);letter-spacing:-.25px;line-height:1.5;word-break:break-word}
+  .rvact{display:flex;gap:8px}
+  .rvbtn{
+    font-size:11px;font-weight:700;color:var(--muted);background:#F5F6F9;border-radius:7px;padding:4px 8px;
+    display:inline-flex;align-items:center;gap:3px;
+  }
+  .rvbtn[aria-pressed="true"]{background:var(--accent-soft);color:#D9531A}
+  .rvbtn:disabled{opacity:.55;cursor:default}
+  .noReview{font-size:12px;color:var(--muted);text-align:center;padding:14px 0}
+
+  .detailcta{
+    position:absolute;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(243,244,247,0),#F3F4F7 30%);z-index:2;
+  }
+  .btn-primary{
+    width:100%;height:50px;border-radius:14px;background:var(--accent);color:#fff;
+    font-size:15px;font-weight:800;letter-spacing:-.3px;box-shadow:0 8px 20px rgba(255,106,43,.32);
+  }
+  .btn-primary:active{background:#ED5A1B}
+  .btn-ghost{
+    width:100%;height:46px;border-radius:13px;background:#fff;border:1px solid var(--line);
+    font-size:14px;font-weight:800;letter-spacing:-.3px;color:var(--ink2);
+  }
+
+  /* ── 리뷰 작성 ──────────────────────── */
+  .field{margin-bottom:15px}
+  .field > label{display:block;font-size:12px;font-weight:800;color:var(--ink2);letter-spacing:-.3px;margin-bottom:7px}
+  .starick{display:flex;gap:6px}
+  .starick button{font-size:30px;line-height:1;color:#DDE1E8;transition:transform .1s}
+  .starick button.on{color:var(--star)}
+  .starick button:active{transform:scale(1.12)}
+  .sliderrow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .sliderrow .lab{flex:0 0 62px;font-size:12px;font-weight:700;color:var(--ink2)}
+  .sliderrow input[type=range]{
+    flex:1 1 auto;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;
+    background:#EEF0F4;outline:none;
+  }
+  .sliderrow input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;
+    border:2px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.14);
+  }
+  .sliderrow input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--accent);
+  }
+  .sliderrow .val{flex:0 0 26px;text-align:right;font-size:12px;font-weight:800;color:var(--ink2)}
+  .seg{display:flex;gap:8px}
+  .seg button{
+    flex:1 1 0;height:42px;border-radius:11px;border:1px solid var(--line);background:#fff;
+    font-size:13px;font-weight:800;color:var(--muted);letter-spacing:-.2px;
+  }
+  .seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:#D9531A}
+  .txtinput,.txtarea{
+    width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;
+    padding:11px 12px;font-size:14px;outline:none;letter-spacing:-.2px;
+  }
+  .txtinput:focus,.txtarea:focus{border-color:#FFC7A8;box-shadow:0 0 0 3px #FFEDE2}
+  .txtarea{min-height:82px;resize:none;line-height:1.5}
+  .hint{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:-.2px}
+  .writefoot{flex:0 0 auto;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+  .writefoot .btn-primary{box-shadow:none}
+
+  /* ── 토스트 ─────────────────────────── */
+  .toast{
+    position:absolute;left:50%;bottom:84px;transform:translate(-50%,12px);
+    max-width:86%;padding:11px 16px;border-radius:12px;background:rgba(26,28,32,.94);color:#fff;
+    font-size:12.5px;font-weight:700;letter-spacing:-.2px;text-align:center;line-height:1.4;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;
+    box-shadow:0 10px 26px rgba(0,0,0,.25);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <header class="topbar">
+    <div class="logo" aria-hidden="true">🍰</div>
+    <div class="brand">
+      <h1>편의점 한입</h1>
+      <p>편의점 디저트·간편식 한줄 리뷰</p>
+    </div>
+    <button class="iconbtn" id="infoBtn" aria-label="앱 안내 보기">i</button>
+  </header>
+
+  <div class="head">
+    <div class="searchwrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path>
+      </svg>
+      <input id="search" type="search" placeholder="제품명 · 편의점 · 태그 검색" autocomplete="off" aria-label="제품 검색">
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="편의점 필터">
+      <button class="tab" role="tab" data-store="전체" aria-selected="true">전체</button>
+      <button class="tab" role="tab" data-store="CU" aria-selected="false">CU</button>
+      <button class="tab" role="tab" data-store="GS25" aria-selected="false">GS25</button>
+      <button class="tab" role="tab" data-store="세븐일레븐" aria-selected="false">세븐일레븐</button>
+      <button class="tab" role="tab" data-store="이마트24" aria-selected="false">이마트24</button>
+    </nav>
+    <div class="sortrow">
+      <span class="count" id="count">제품 10개</span>
+      <select id="sort" aria-label="정렬 기준">
+        <option value="rate">재구매율 순</option>
+        <option value="star">별점 높은 순</option>
+        <option value="count">리뷰 많은 순</option>
+        <option value="price">가격 낮은 순</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="scroll" id="scroll">
+    <div class="notice">
+      <span aria-hidden="true">ℹ️</span>
+      <span><b>프로토타입 예시 데이터</b>입니다. 실제 판매 가격·영양정보와 다를 수 있고, 리뷰도 화면 시연용으로 작성된 예시예요.</span>
+    </div>
+    <div class="list" id="list"></div>
+    <p class="foot">
+      <b>편의점 한입</b> · 편의점 디저트·간편식 리뷰 프로토타입 v0.1<br>
+      하단 배너(320×50)와 상세 화면 배너(300×100)는 실제 운영 시 애드센스·애드핏·쿠팡 파트너스 광고 지면으로 연결되는 자리입니다.
+    </p>
+  </div>
+
+  <div class="adbar">
+    <div class="ad ad-320x50">광고 지면 · 320×50<br>애드핏 / 애드센스 / 쿠팡 파트너스</div>
+  </div>
+
+  <!-- 상세 -->
+  <section class="sheet" id="detail" role="dialog" aria-modal="true" aria-label="제품 상세">
+    <div class="sheettop">
+      <button class="round" id="detailBack" aria-label="목록으로 돌아가기">‹</button>
+      <span class="t" id="detailTitle">제품 상세</span>
+      <button class="round" id="shareBtn" aria-label="제품 정보 공유하기" style="margin-left:auto">↗</button>
+    </div>
+    <div class="sheetbody" id="detailBody"></div>
+    <div class="detailcta">
+      <button class="btn-primary" id="writeBtn">리뷰 쓰기</button>
+    </div>
+  </section>
+
+  <!-- 리뷰 작성 -->
+  <section class="sheet" id="write" role="dialog" aria-modal="true" aria-label="리뷰 작성">
+    <div class="sheettop">
+      <button class="round" id="writeBack" aria-label="리뷰 작성 닫기">‹</button>
+      <span class="t">리뷰 쓰기</span>
+      <span id="writeFor" style="margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:700;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <div class="sheetbody" style="padding-bottom:24px">
+      <div class="field">
+        <label>별점 <span style="color:var(--accent)">*</span></label>
+        <div class="starick" id="starPick" role="group" aria-label="별점 선택"></div>
+      </div>
+      <div class="field">
+        <label>세부 평가</label>
+        <div id="sliders"></div>
+      </div>
+      <div class="field">
+        <label>다시 살 건가요? <span style="color:var(--accent)">*</span></label>
+        <div class="seg" id="buyPick">
+          <button type="button" data-buy="1" aria-pressed="false">또 살래요</button>
+          <button type="button" data-buy="0" aria-pressed="false">이번 한 번만</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="nick">닉네임</label>
+        <input class="txtinput" id="nick" type="text" maxlength="12" placeholder="익명" autocomplete="off">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="rvtext">한줄평 <span style="color:var(--accent)">*</span></label>
+        <textarea class="txtarea" id="rvtext" maxlength="80" placeholder="맛·양·가격은 어땠나요? (최대 80자)"></textarea>
+        <div class="hint"><span>솔직할수록 다른 사람에게 도움이 돼요</span><span id="counter">0/80</span></div>
+      </div>
+    </div>
+    <div class="writefoot">
+      <button class="btn-primary" id="submitReview">등록하기</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <span class="sr" id="live" aria-live="polite"></span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─────────────── 데이터 ─────────────── */
+  var STORE_LABEL = {
+    'CU': 'CU',
+    'GS25': 'GS25',
+    '세븐일레븐': '7-ELEVEN',
+    '이마트24': 'emart24'
+  };
+  var STORE_CLASS = {
+    'CU': 'b-CU',
+    'GS25': 'b-GS25',
+    '세븐일레븐': 'b-7ELEVEN',
+    '이마트24': 'b-EMART24'
+  };
+  var SUB_KEYS = ['sweet', 'value', 'fill', 'quality'];
+  var SUB_LABEL = { sweet: '단맛', value: '가성비', fill: '양/포만감', quality: '퀄리티' };
+
+  var PRODUCTS = [
+    {
+      id: 'p1', emoji: '🍞', name: '연세우유 생크림빵', store: 'CU', price: 2900, kcal: 390, sugar: 18,
+      tags: ['생크림', '달달함', 'SNS인기'],
+      base: { star: 4.6, count: 22, rate: 87, sub: { sweet: 4.2, value: 4.3, fill: 3.4, quality: 4.5 } },
+      reviews: [
+        { user: '빵순이', star: 5, buy: true, sub: { sweet: 4, value: 5, fill: 4, quality: 5 }, text: '생크림이 진짜 우유맛이라 좋아요. 빵은 살짝 퍽퍽한데 크림이 다 커버해줍니다.', helpful: 23, days: '2일 전' },
+        { user: '출근러', star: 4, buy: true, sub: { sweet: 4, value: 4, fill: 3, quality: 4 }, text: '2,900원에 이 정도면 가성비 좋아요. 아메리카노랑 먹으면 딱입니다.', helpful: 14, days: '5일 전' },
+        { user: '다이어터K', star: 4, buy: true, sub: { sweet: 3, value: 4, fill: 3, quality: 4 }, text: '크림 많은데 많이 달지는 않아서 의외로 괜찮았어요.', helpful: 6, days: '1주 전' }
+      ]
+    },
+    {
+      id: 'p2', emoji: '🍫', name: '두바이 스타일 초콜릿', store: 'CU', price: 4500, kcal: 320, sugar: 26,
+      tags: ['두바이', '피스타치오', '한정판'],
+      base: { star: 4.3, count: 31, rate: 72, sub: { sweet: 4.6, value: 2.9, fill: 3.6, quality: 4.4 } },
+      reviews: [
+        { user: '트렌드민', star: 5, buy: true, sub: { sweet: 5, value: 3, fill: 4, quality: 5 }, text: '카다이프 바삭한 식감이 살아있어요. 편의점에서 이 맛이면 놀랍습니다.', helpful: 31, days: '1일 전' },
+        { user: '직장인J', star: 3, buy: false, sub: { sweet: 5, value: 2, fill: 3, quality: 4 }, text: '맛은 있는데 4,500원은 좀… 한 번 먹어보고 끝낼 것 같아요.', helpful: 27, days: '3일 전' },
+        { user: '초코덕', star: 4, buy: true, sub: { sweet: 5, value: 3, fill: 4, quality: 5 }, text: '피스타치오 향이 진해요. 커피랑 먹으면 단맛이 좀 잡힙니다.', helpful: 9, days: '6일 전' }
+      ]
+    },
+    {
+      id: 'p3', emoji: '🍮', name: '밤 티라미수 컵', store: 'GS25', price: 3900, kcal: 310, sugar: 22,
+      tags: ['밤', '커피맛', '디저트'],
+      base: { star: 4.4, count: 17, rate: 79, sub: { sweet: 4.0, value: 3.6, fill: 3.2, quality: 4.5 } },
+      reviews: [
+        { user: '밤알러', star: 5, buy: true, sub: { sweet: 4, value: 4, fill: 3, quality: 5 }, text: '밤 알갱이가 씹혀서 좋아요. 커피 없이도 충분히 먹을 만합니다.', helpful: 18, days: '2일 전' },
+        { user: '야식왕', star: 4, buy: true, sub: { sweet: 4, value: 3, fill: 3, quality: 4 }, text: '맛은 진한데 양이 적어서 두 개 먹게 돼요. 그게 함정.', helpful: 11, days: '4일 전' }
+      ]
+    },
+    {
+      id: 'p4', emoji: '🍱', name: '김혜자 도시락', store: 'GS25', price: 4900, kcal: 612, sugar: 9,
+      tags: ['든든', '반찬가득', '점심'],
+      base: { star: 4.5, count: 46, rate: 84, sub: { sweet: 2.6, value: 4.6, fill: 4.8, quality: 4.1 } },
+      reviews: [
+        { user: '점심해결사', star: 5, buy: true, sub: { sweet: 3, value: 5, fill: 5, quality: 4 }, text: '반찬 구성이 진짜 알차요. 4,900원에 이 정도면 밥집 갈 이유가 없습니다.', helpful: 42, days: '1일 전' },
+        { user: '현장직M', star: 5, buy: true, sub: { sweet: 2, value: 5, fill: 5, quality: 4 }, text: '전자레인지 1분 30초 돌리면 국물까지 완벽해요. 매일 먹어도 안 질림.', helpful: 20, days: '3일 전' },
+        { user: '소식좌', star: 4, buy: false, sub: { sweet: 3, value: 4, fill: 5, quality: 4 }, text: '양이 많아서 저는 다 못 먹었어요. 남자는 딱일 듯.', helpful: 7, days: '1주 전' }
+      ]
+    },
+    {
+      id: 'p5', emoji: '🧁', name: '폭신 카스텔라', store: '세븐일레븐', price: 2500, kcal: 280, sugar: 17,
+      tags: ['폭신', '아침대용', '가성비'],
+      base: { star: 4.1, count: 13, rate: 74, sub: { sweet: 3.2, value: 4.4, fill: 3.5, quality: 3.9 } },
+      reviews: [
+        { user: '아침겸', star: 4, buy: true, sub: { sweet: 3, value: 4, fill: 4, quality: 4 }, text: '폭신하고 많이 달지 않아서 아침 대용으로 좋아요. 우유랑 먹으면 딱.', helpful: 13, days: '5일 전' },
+        { user: '카스텔라러', star: 4, buy: true, sub: { sweet: 4, value: 4, fill: 3, quality: 4 }, text: '2,500원 치고 결이 좋아요. 다만 위에 설탕이 좀 뭉쳐 있습니다.', helpful: 4, days: '1주 전' }
+      ]
+    },
+    {
+      id: 'p6', emoji: '🍙', name: '에그마요 삼각김밥', store: '이마트24', price: 1400, kcal: 210, sugar: 3,
+      tags: ['계란', '가성비', '간식'],
+      base: { star: 4.2, count: 28, rate: 81, sub: { sweet: 2.8, value: 4.8, fill: 3.1, quality: 3.9 } },
+      reviews: [
+        { user: '삼김러버', star: 4, buy: true, sub: { sweet: 3, value: 5, fill: 3, quality: 4 }, text: '1,400원에 계란이 이만큼 들어있으면 말 다 했죠. 소스도 고소해요.', helpful: 16, days: '2일 전' },
+        { user: '야근중', star: 4, buy: true, sub: { sweet: 3, value: 5, fill: 3, quality: 4 }, text: '밥알이 살짝 퍼져 있는데 맛은 괜찮습니다. 급할 때 최고.', helpful: 5, days: '4일 전' }
+      ]
+    },
+    {
+      id: 'p7', emoji: '🥪', name: '통밀 치킨 샌드위치', store: '세븐일레븐', price: 3600, kcal: 340, sugar: 6,
+      tags: ['닭가슴살', '단백질', '다이어트'],
+      base: { star: 4.0, count: 15, rate: 68, sub: { sweet: 2.4, value: 3.4, fill: 3.9, quality: 4.0 } },
+      reviews: [
+        { user: '헬스장3년', star: 4, buy: true, sub: { sweet: 2, value: 4, fill: 4, quality: 4 }, text: '닭가슴살이 퍽퍽한데 소스가 잡아줘요. 운동 후 간단히 먹기 좋습니다.', helpful: 9, days: '3일 전' },
+        { user: '다이어터K', star: 3, buy: false, sub: { sweet: 2, value: 3, fill: 4, quality: 4 }, text: '빵이 통밀이라 좀 퍽퍽해요. 가격 대비 무난하지만 또 살 것 같진 않아요.', helpful: 6, days: '6일 전' }
+      ]
+    },
+    {
+      id: 'p8', emoji: '🍡', name: '제주 감귤 찹쌀떡', store: '이마트24', price: 2200, kcal: 260, sugar: 21,
+      tags: ['감귤', '쫀득', '선물용'],
+      base: { star: 4.3, count: 11, rate: 76, sub: { sweet: 4.1, value: 3.9, fill: 3.0, quality: 4.2 } },
+      reviews: [
+        { user: '떡집딸', star: 5, buy: true, sub: { sweet: 4, value: 4, fill: 3, quality: 5 }, text: '감귤 향이 인공적이지 않고 진해요. 떡도 부드럽고요.', helpful: 12, days: '2일 전' },
+        { user: '제주출신', star: 4, buy: true, sub: { sweet: 4, value: 4, fill: 3, quality: 4 }, text: '고향 생각 나네요. 2,200원이면 자주 사 먹을 것 같습니다.', helpful: 8, days: '5일 전' }
+      ]
+    },
+    {
+      id: 'p9', emoji: '🥯', name: '크림치즈 베이글', store: 'GS25', price: 3200, kcal: 350, sugar: 8,
+      tags: ['베이글', '크림치즈', '브런치'],
+      base: { star: 4.2, count: 19, rate: 80, sub: { sweet: 2.9, value: 3.8, fill: 4.0, quality: 4.3 } },
+      reviews: [
+        { user: '브런치족', star: 4, buy: true, sub: { sweet: 3, value: 4, fill: 4, quality: 4 }, text: '치즈가 넉넉히 들어있고 빵이 쫄깃해요. 커피랑 먹으면 카페 부럽지 않음.', helpful: 19, days: '1일 전' },
+        { user: '출근러', star: 4, buy: true, sub: { sweet: 3, value: 3, fill: 4, quality: 4 }, text: '전자레인지 20초 돌리면 치즈가 살아납니다. 꼭 돌려 드세요.', helpful: 15, days: '4일 전' }
+      ]
+    },
+    {
+      id: 'p10', emoji: '🍰', name: '딸기 생크림 롤케이크', store: 'CU', price: 3500, kcal: 330, sugar: 24,
+      tags: ['딸기', '생크림', '케이크'],
+      base: { star: 4.1, count: 24, rate: 71, sub: { sweet: 4.3, value: 3.3, fill: 3.2, quality: 4.2 } },
+      reviews: [
+        { user: '케이크덕', star: 4, buy: true, sub: { sweet: 4, value: 3, fill: 3, quality: 4 }, text: '딸기 시럽 맛이 좀 강한데 3,500원이면 만족합니다. 생크림은 부드러워요.', helpful: 10, days: '3일 전' },
+        { user: '달달구리', star: 5, buy: true, sub: { sweet: 5, value: 4, fill: 3, quality: 4 }, text: '생일 케이크 대신 먹었는데 충분했어요. 냉장고에 넣어두면 더 맛있어요.', helpful: 6, days: '1주 전' }
+      ]
+    }
+  ];
+
+  /* ─────────────── 저장소 ─────────────── */
+  var LS_KEY = 'cvs-hanip.v1';
+  var mem = { reviews: {}, helpful: {}, reported: {} };
+
+  function loadStore() {
+    try {
+      var raw = window.localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      var parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        mem.reviews = parsed.reviews || {};
+        mem.helpful = parsed.helpful || {};
+        mem.reported = parsed.reported || {};
+      }
+    } catch (e) { /* 저장소를 못 쓰면 메모리로만 동작 */ }
+  }
+  function saveStore() {
+    try { window.localStorage.setItem(LS_KEY, JSON.stringify(mem)); } catch (e) {}
+  }
+
+  /* ─────────────── 도우미 ─────────────── */
+  function $(sel) { return document.querySelector(sel); }
+  function won(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function comma(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function byId(id) {
+    for (var i = 0; i < PRODUCTS.length; i++) if (PRODUCTS[i].id === id) return PRODUCTS[i];
+    return null;
+  }
+  function userReviews(id) { return mem.reviews[id] || []; }
+
+  function stats(p) {
+    var ur = userReviews(p.id);
+    var n = p.base.count + ur.length;
+    var starSum = p.base.star * p.base.count;
+    var rateSum = p.base.rate * p.base.count;
+    var sub = {};
+    SUB_KEYS.forEach(function (k) { sub[k] = p.base.sub[k] * p.base.count; });
+    for (var i = 0; i < ur.length; i++) {
+      starSum += ur[i].star;
+      rateSum += ur[i].buy ? 100 : 0;
+      SUB_KEYS.forEach(function (k) { sub[k] += ur[i].sub[k]; });
+    }
+    SUB_KEYS.forEach(function (k) { sub[k] = sub[k] / n; });
+    return {
+      star: Math.round((starSum / n) * 100) / 100,
+      count: n,
+      rate: Math.round(rateSum / n),
+      sub: sub,
+      mine: ur.length
+    };
+  }
+
+  function starsText(star, size) {
+    var full = Math.round(star);
+    var out = '';
+    for (var i = 1; i <= 5; i++) {
+      out += i <= full ? '<span>★</span>' : '<span class="off">★</span>';
+    }
+    return '<span class="rvstars" aria-label="별점 ' + star + '점">' + out + '</span>';
+  }
+  /* ─────────────── 필터·정렬 ─────────────── */
+  var view = { store: '전체', q: '', sort: 'rate' };
+  var currentId = null;
+
+  function matches(p, q) {
+    if (!q) return true;
+    var hay = (p.name + ' ' + p.store + ' ' + STORE_LABEL[p.store] + ' ' + p.tags.join(' ')).toLowerCase();
+    return hay.indexOf(q.toLowerCase()) !== -1;
+  }
+
+  function visibleProducts() {
+    var q = view.q.trim();
+    var list = PRODUCTS.filter(function (p) {
+      if (view.store !== '전체' && p.store !== view.store) return false;
+      return matches(p, q);
+    });
+    list.sort(function (a, b) {
+      var sa = stats(a), sb = stats(b);
+      if (view.sort === 'rate') return sb.rate - sa.rate || sb.star - sa.star;
+      if (view.sort === 'star') return sb.star - sa.star || sb.count - sa.count;
+      if (view.sort === 'count') return sb.count - sa.count || sb.star - sa.star;
+      if (view.sort === 'price') return a.price - b.price || sb.star - sa.star;
+      return 0;
+    });
+    return list;
+  }
+
+  /* ─────────────── 목록 렌더 ─────────────── */
+  function renderList() {
+    var list = visibleProducts();
+    var el = $('#list');
+    var totalReviews = 0;
+    PRODUCTS.forEach(function (p) { totalReviews += stats(p).count; });
+
+    if (!list.length) {
+      el.innerHTML = '<div class="empty">‘' + esc(view.q) + '’ 검색 결과가 없어요.<br>다른 제품명이나 편의점 이름으로 찾아보세요.</div>';
+    } else {
+      var html = '';
+      list.forEach(function (p) {
+        var s = stats(p);
+        html += '<div class="card" data-id="' + p.id + '" role="button" tabindex="0">' +
+          '<span class="thumb" aria-hidden="true">' + p.emoji + '</span>' +
+          '<span class="cardbody">' +
+            '<span class="cardtop"><span class="badge ' + STORE_CLASS[p.store] + '">' + STORE_LABEL[p.store] + '</span></span>' +
+            '<div class="cardname">' + esc(p.name) + '</div>' +
+            '<div class="meta"><span class="won">' + won(p.price) + '원</span> · ' + p.kcal + 'kcal · 당류 ' + p.sugar + 'g</div>' +
+            '<div class="scoreline">' +
+              '<span class="st" aria-hidden="true">★</span><span class="num">' + s.star.toFixed(1) + '</span>' +
+              '<span class="rev">리뷰 ' + comma(s.count) + '</span>' +
+              '<span class="ratepill">재구매 ' + s.rate + '%</span>' +
+            '</div>' +
+            '<div class="tags">' + p.tags.map(function (t) { return '<span class="tag">#' + esc(t) + '</span>'; }).join('') + '</div>' +
+          '</span>' +
+        '</div>';
+      });
+      el.innerHTML = html;
+    }
+    $('#count').textContent = '제품 ' + list.length + '개 · 리뷰 ' + comma(totalReviews) + '개';
+  }
+
+  /* ─────────────── 상세 렌더 ─────────────── */
+  function detailHTML(p) {
+    var s = stats(p);
+    var ur = userReviews(p.id);
+    var seed = p.reviews.map(function (r, i) { return { r: r, key: p.id + '-s' + i, mine: false }; });
+    var mine = ur.map(function (r, i) { return { r: r, key: p.id + '-u' + i, mine: true }; });
+    var all = mine.concat(seed);
+
+    var bars = SUB_KEYS.map(function (k) {
+      var v = s.sub[k];
+      return '<div class="bar"><span class="lab">' + SUB_LABEL[k] + '</span>' +
+        '<span class="track"><span class="fill" style="width:' + Math.max(4, (v / 5) * 100).toFixed(1) + '%"></span></span>' +
+        '<span class="val">' + v.toFixed(1) + '</span></div>';
+    }).join('');
+
+    var reviewsHTML = all.map(function (item) {
+      var r = item.r;
+      var on = !!mem.helpful[item.key];
+      var reported = !!mem.reported[item.key];
+      var helpful = (r.helpful || 0) + (on ? 1 : 0);
+      return '<div class="review" data-key="' + item.key + '">' +
+        '<span class="avatar" aria-hidden="true">' + esc(String(r.user).slice(0, 1)) + '</span>' +
+        '<div class="rvbody">' +
+          '<div class="rvtop">' +
+            '<span class="rvuser">' + esc(r.user) + '</span>' +
+            (item.mine ? '<span class="mine">내 리뷰</span>' : '') +
+            '<span class="rvd">' + esc(r.days || '방금') + '</span>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-top:1px">' +
+            starsText(r.star) +
+            '<span class="rvbuy' + (r.buy ? '' : ' no') + '">' + (r.buy ? '재구매 의사' : '재구매 없음') + '</span>' +
+          '</div>' +
+          '<p class="rvtext">' + esc(r.text) + '</p>' +
+          '<div class="rvact">' +
+            '<button class="rvbtn" type="button" data-help="' + item.key + '" aria-pressed="' + (on ? 'true' : 'false') + '">👍 도움돼요 ' + helpful + '</button>' +
+            '<button class="rvbtn" type="button" data-report="' + item.key + '"' + (reported ? ' disabled' : '') + '>' + (reported ? '신고 접수됨' : '🚩 신고') + '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '' +
+      '<div class="hero">' +
+        '<div class="heroemoji" aria-hidden="true">' + p.emoji + '</div>' +
+        '<span class="badge ' + STORE_CLASS[p.store] + '">' + STORE_LABEL[p.store] + '</span>' +
+        '<div class="heroname">' + esc(p.name) + '</div>' +
+        '<div class="herometa"><span class="won">' + won(p.price) + '원</span> · ' + p.kcal + 'kcal · 당류 ' + p.sugar + 'g</div>' +
+        '<div class="herostats">' +
+          '<div class="hstat"><div class="v st">' + s.star.toFixed(2) + '<small>/5</small></div><div class="k">평균 별점</div></div>' +
+          '<div class="hstat"><div class="v">' + comma(s.count) + '</div><div class="k">리뷰 수</div></div>' +
+          '<div class="hstat"><div class="v gd">' + s.rate + '%</div><div class="k">재구매율</div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sec">' +
+        '<h3>세부 평가 <span class="n">리뷰 ' + comma(s.count) + '개 평균</span></h3>' + bars +
+      '</div>' +
+      '<div class="ad ad-300x100">광고 지면 · 300×100<br>애드센스 / 애드핏 / 쿠팡 파트너스</div>' +
+      '<div class="sec">' +
+        '<h3>한줄평 <span class="n">' + comma(all.length) + '개 표시중</span></h3>' +
+        (all.length ? reviewsHTML : '<p class="noReview">아직 리뷰가 없어요. 첫 리뷰를 남겨보세요.</p>') +
+      '</div>' +
+      '<p class="foot">리뷰와 별점은 프로토타입 시연용 예시이며, 실제 앱에서는 로그인·신고 검수 절차를 거칩니다.</p>';
+  }
+
+  function openDetail(id) {
+    var p = byId(id);
+    if (!p) return;
+    currentId = id;
+    renderDetail();
+    $('#detail').classList.add('open');
+    $('#detail').setAttribute('aria-hidden', 'false');
+    $('#detailBody').scrollTop = 0;
+  }
+  function renderDetail() {
+    var p = byId(currentId);
+    if (!p) return;
+    $('#detailTitle').textContent = p.name;
+    $('#detailBody').innerHTML = detailHTML(p);
+    $('#writeFor').textContent = '#' + p.name;
+  }
+  function closeDetail() {
+    $('#detail').classList.remove('open');
+    $('#detail').setAttribute('aria-hidden', 'true');
+  }
+
+  /* ─────────────── 리뷰 작성 ─────────────── */
+  var draft = { star: 0, sub: { sweet: 3, value: 3, fill: 3, quality: 3 }, buy: null };
+
+  function buildStarPick() {
+    var wrap = $('#starPick');
+    var html = '';
+    for (var i = 1; i <= 5; i++) {
+      html += '<button type="button" data-star="' + i + '" aria-label="별점 ' + i + '점" aria-pressed="false">★</button>';
+    }
+    wrap.innerHTML = html;
+  }
+  function paintStarPick() {
+    var btns = $('#starPick').querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      var n = Number(btns[i].getAttribute('data-star'));
+      btns[i].classList.toggle('on', n <= draft.star);
+      btns[i].setAttribute('aria-pressed', String(n <= draft.star));
+    }
+  }
+  function buildSliders() {
+    var wrap = $('#sliders');
+    var html = '';
+    SUB_KEYS.forEach(function (k) {
+      html += '<div class="sliderrow">' +
+        '<span class="lab">' + SUB_LABEL[k] + '</span>' +
+        '<input type="range" min="0.5" max="5" step="0.5" value="3" data-slider="' + k + '" aria-label="' + SUB_LABEL[k] + ' 평가">' +
+        '<span class="val" id="v-' + k + '">3.0</span></div>';
+    });
+    wrap.innerHTML = html;
+  }
+  function openWrite() {
+    if (!currentId) return;
+    draft = { star: 0, sub: { sweet: 3, value: 3, fill: 3, quality: 3 }, buy: null };
+    paintStarPick();
+    SUB_KEYS.forEach(function (k) {
+      var input = $('#sliders').querySelector('[data-slider="' + k + '"]');
+      if (input) input.value = '3';
+      var lab = $('#v-' + k);
+      if (lab) lab.textContent = '3.0';
+    });
+    var segs = $('#buyPick').querySelectorAll('button');
+    for (var i = 0; i < segs.length; i++) segs[i].setAttribute('aria-pressed', 'false');
+    $('#nick').value = '';
+    $('#rvtext').value = '';
+    $('#counter').textContent = '0/80';
+    $('#write').classList.add('open');
+    $('#write').setAttribute('aria-hidden', 'false');
+  }
+  function closeWrite() {
+    $('#write').classList.remove('open');
+    $('#write').setAttribute('aria-hidden', 'true');
+  }
+
+  function submitReview() {
+    var p = byId(currentId);
+    if (!p) return;
+    var text = $('#rvtext').value.trim();
+    if (!draft.star) { toast('별점을 먼저 선택해 주세요'); return; }
+    if (draft.buy === null) { toast('재구매 의사를 선택해 주세요'); return; }
+    if (!text) { toast('한줄평을 입력해 주세요'); $('#rvtext').focus(); return; }
+
+    var nick = $('#nick').value.trim() || '익명';
+    var review = {
+      user: nick.slice(0, 12),
+      star: draft.star,
+      buy: draft.buy === 1,
+      sub: {
+        sweet: Number(draft.sub.sweet),
+        value: Number(draft.sub.value),
+        fill: Number(draft.sub.fill),
+        quality: Number(draft.sub.quality)
+      },
+      text: text,
+      helpful: 0,
+      days: '방금',
+      at: Date.now()
+    };
+    if (!mem.reviews[p.id]) mem.reviews[p.id] = [];
+    mem.reviews[p.id].unshift(review);
+    saveStore();
+    renderList();
+    renderDetail();
+    closeWrite();
+    var hs = $('#detailBody').querySelector('.herostats');
+    if (hs) { hs.classList.add('pulse'); setTimeout(function () { hs.classList.remove('pulse'); }, 1200); }
+    toast('리뷰가 등록됐어요 · 평균 별점과 재구매율에 반영했습니다');
+  }
+
+  /* ─────────────── 공유 ─────────────── */
+  var SHARE_URL = 'https://rawcdn.githack.com/7fgws64w9k-coder/-/main/cvs/index.html';
+
+  function shareSummary(p) {
+    var s = stats(p);
+    return '[편의점 한입] ' + STORE_LABEL[p.store] + ' · ' + p.name + '\n' +
+      '★ ' + s.star.toFixed(1) + ' (리뷰 ' + comma(s.count) + ') · 재구매율 ' + s.rate + '%\n' +
+      won(p.price) + '원 · ' + p.kcal + 'kcal · 당류 ' + p.sugar + 'g\n' +
+      '# ' + p.tags.join(' #') + '\n' + SHARE_URL;
+  }
+
+  function copyText(text) {
+    return new Promise(function (resolve) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { resolve(true); }, function () { resolve(false); });
+        return;
+      }
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        resolve(!!ok);
+      } catch (e) { resolve(false); }
+    });
+  }
+
+  function shareProduct() {
+    var p = byId(currentId);
+    if (!p) return;
+    var text = shareSummary(p);
+    // Web Share API가 있으면 네이티브 공유 시트를 먼저 시도
+    if (navigator.share && typeof navigator.share === 'function') {
+      navigator.share({ title: p.name, text: text }).then(function () {
+        toast('공유했어요');
+      }, function () {
+        copyText(text).then(function (ok) {
+          toast(ok ? '요약을 복사했어요' : '공유 텍스트: ' + text);
+        });
+      });
+      return;
+    }
+    copyText(text).then(function (ok) {
+      toast(ok ? '요약을 복사했어요 · 붙여넣기 해보세요' : '복사가 막혀 있어요 · 공유 버튼을 길게 눌러 주세요');
+      if (ok) $('#live').textContent = '제품 요약이 클립보드에 복사되었습니다';
+    });
+  }
+
+  /* ─────────────── 토스트 ─────────────── */
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+
+  /* ─────────────── 이벤트 ─────────────── */
+  $('#search').addEventListener('input', function (e) {
+    view.q = e.target.value || '';
+    renderList();
+  });
+
+  $('#tabs').addEventListener('click', function (e) {
+    var btn = e.target.closest('.tab');
+    if (!btn) return;
+    view.store = btn.getAttribute('data-store');
+    var tabs = $('#tabs').querySelectorAll('.tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].setAttribute('aria-selected', String(tabs[i] === btn));
+    }
+    renderList();
+  });
+
+  $('#sort').addEventListener('change', function (e) {
+    view.sort = e.target.value;
+    renderList();
+  });
+
+  $('#list').addEventListener('click', function (e) {
+    var card = e.target.closest('.card');
+    if (!card) return;
+    openDetail(card.getAttribute('data-id'));
+  });
+
+  $('#list').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var card = e.target.closest('.card');
+    if (!card) return;
+    e.preventDefault();
+    openDetail(card.getAttribute('data-id'));
+  });
+
+  $('#detailBack').addEventListener('click', closeDetail);
+  $('#shareBtn').addEventListener('click', shareProduct);
+  $('#writeBtn').addEventListener('click', openWrite);
+  $('#writeBack').addEventListener('click', closeWrite);
+  $('#submitReview').addEventListener('click', submitReview);
+
+  $('#detailBody').addEventListener('click', function (e) {
+    var helpBtn = e.target.closest('[data-help]');
+    if (helpBtn) {
+      var hk = helpBtn.getAttribute('data-help');
+      mem.helpful[hk] = !mem.helpful[hk];
+      saveStore();
+      var p = byId(currentId);
+      var review = null;
+      var ur = userReviews(currentId);
+      var keyParts = hk.split('-');
+      if (keyParts[keyParts.length - 1].charAt(0) === 'u') {
+        var ui = Number(keyParts[keyParts.length - 1].slice(1));
+        review = ur[ui];
+      } else {
+        var si = Number(keyParts[keyParts.length - 1].slice(1));
+        review = p.reviews[si];
+      }
+      var baseCount = review ? (review.helpful || 0) : 0;
+      var on = mem.helpful[hk];
+      helpBtn.setAttribute('aria-pressed', String(on));
+      helpBtn.textContent = '👍 도움돼요 ' + (baseCount + (on ? 1 : 0));
+      if (on) toast('도움돼요에 공감했어요');
+      return;
+    }
+    var repBtn = e.target.closest('[data-report]');
+    if (repBtn) {
+      var rk = repBtn.getAttribute('data-report');
+      mem.reported[rk] = true;
+      saveStore();
+      repBtn.disabled = true;
+      repBtn.textContent = '신고 접수됨';
+      toast('신고가 접수됐어요 · 검토 후 조치됩니다');
+      return;
+    }
+  });
+
+  $('#starPick').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-star]');
+    if (!btn) return;
+    draft.star = Number(btn.getAttribute('data-star'));
+    paintStarPick();
+  });
+
+  $('#sliders').addEventListener('input', function (e) {
+    var input = e.target;
+    if (!input || input.type !== 'range') return;
+    var k = input.getAttribute('data-slider');
+    draft.sub[k] = Number(input.value);
+    var lab = $('#v-' + k);
+    if (lab) lab.textContent = Number(input.value).toFixed(1);
+  });
+
+  $('#buyPick').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-buy]');
+    if (!btn) return;
+    draft.buy = Number(btn.getAttribute('data-buy'));
+    var segs = $('#buyPick').querySelectorAll('button');
+    for (var i = 0; i < segs.length; i++) segs[i].setAttribute('aria-pressed', String(segs[i] === btn));
+  });
+
+  $('#rvtext').addEventListener('input', function (e) {
+    $('#counter').textContent = e.target.value.length + '/80';
+  });
+
+  $('#infoBtn').addEventListener('click', function () {
+    toast('프로토타입 v0.1 · 예시 데이터 · 광고 지면 포함');
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if ($('#write').classList.contains('open')) { closeWrite(); return; }
+    if ($('#detail').classList.contains('open')) closeDetail();
+  });
+
+  /* ─────────────── 초기화 ─────────────── */
+  loadStore();
+  buildStarPick();
+  buildSliders();
+  renderList();
+  $('#detail').setAttribute('aria-hidden', 'true');
+  $('#write').setAttribute('aria-hidden', 'true');
+})();
+</script>
+</body>
+</html>
