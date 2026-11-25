@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b0f">
+<title>담배 리뷰 · 프로토타입</title>
+<style>
+  :root{
+    --bg:#080b0f;
+    --surface:#111820;
+    --surface2:#18222c;
+    --line:#243240;
+    --text:#e9f0f7;
+    --muted:#93a4b5;
+    --accent:#c9f75a;
+    --accent-ink:#101a05;
+    --star:#f7c948;
+    --danger:#ff6b6b;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:#04060a;color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;align-items:stretch;
+  }
+  @media (min-width:480px){
+    body{align-items:center;padding:12px 0}
+  }
+  .phone{
+    position:relative;width:100%;max-width:430px;height:100dvh;background:var(--bg);
+    overflow:hidden;display:flex;flex-direction:column;
+  }
+  @media (min-width:480px){
+    .phone{height:min(932px,calc(100dvh - 24px));border-radius:36px;border:1px solid #1a2531;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input,textarea,select{font:inherit;color:inherit}
+  .hidden{display:none !important}
+  .muted{color:var(--muted)}
+
+  /* ── 성인 확인 게이트 ─────────────────────────── */
+  .gate{
+    position:absolute;inset:0;z-index:100;background:
+      radial-gradient(120% 70% at 50% -10%,#1b2a1a 0%,transparent 60%),
+      var(--bg);
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:34px 24px 26px;overflow-y:auto;
+  }
+  .gate-top{display:flex;align-items:center;gap:8px}
+  .badge-19{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:11px;background:var(--accent);color:var(--accent-ink);
+    font-weight:800;font-size:13px;letter-spacing:.02em;
+  }
+  .gate-top .proto{
+    font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;
+    border:1px solid var(--line);border-radius:999px;padding:4px 9px;
+  }
+  .gate h1{font-size:27px;line-height:1.32;margin:26px 0 12px;letter-spacing:-.02em}
+  .gate p{font-size:14px;line-height:1.65;color:var(--muted);margin:0 0 18px}
+  .gate-list{list-style:none;padding:0;margin:0;display:grid;gap:11px;font-size:13px;line-height:1.55}
+  .gate-list li{display:flex;gap:9px;align-items:flex-start;color:#c3d0dc}
+  .gate-list b{color:var(--text);font-weight:600}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:7px;flex:none}
+  .gate-actions{display:grid;gap:10px;margin-top:22px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:15px 18px;border-radius:14px;font-weight:700;font-size:15px;
+    transition:transform .12s ease,filter .12s ease;
+  }
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:var(--accent);color:var(--accent-ink)}
+  .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+  .btn-danger{background:rgba(255,107,107,.12);color:#ffb4b4;border:1px solid rgba(255,107,107,.35)}
+  .gate-foot{font-size:11.5px;line-height:1.6;color:#7e8f9f}
+  .gate-foot strong{color:#a9b9c8;font-weight:600}
+  .blocked{
+    margin-top:16px;background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);
+    border-radius:14px;padding:14px;font-size:13px;line-height:1.6;color:#ffc9c9;
+  }
+
+  /* ── 앱 셸 ────────────────────────────────────── */
+  .app{display:flex;flex-direction:column;flex:1;min-height:0}
+  .topbar{padding:20px 20px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .topbar h1{font-size:20px;margin:0;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+  .topbar h1 .badge-19{width:24px;height:24px;border-radius:8px;font-size:10px}
+  .topbar .sub{font-size:11.5px;color:var(--muted);margin:5px 0 0}
+  .proto-chip{
+    font-size:10px;letter-spacing:.06em;color:#9fb0c0;background:var(--surface2);
+    border:1px solid var(--line);border-radius:999px;padding:5px 9px;white-space:nowrap;
+  }
+  .notice{
+    margin:0 16px 12px;padding:10px 12px;border-radius:12px;background:rgba(201,247,90,.07);
+    border:1px solid rgba(201,247,90,.18);font-size:11.5px;line-height:1.55;color:#cfe4a8;
+  }
+
+  .filterblock{position:sticky;top:0;z-index:10;background:linear-gradient(var(--bg) 78%,rgba(8,11,15,0));padding-bottom:8px}
+  .searchwrap{padding:0 16px 10px;position:relative}
+  .searchwrap input{
+    width:100%;padding:13px 14px 13px 40px;border-radius:13px;background:var(--surface);
+    border:1px solid var(--line);font-size:14px;outline:none;
+  }
+  .searchwrap input::placeholder{color:#6f8090}
+  .searchwrap input:focus{border-color:rgba(201,247,90,.5);background:#0e151c}
+  .searchwrap .ico{position:absolute;left:29px;top:23px;transform:translateY(-50%);font-size:14px;color:#77889a}
+  .chips{display:flex;gap:7px;overflow-x:auto;padding:0 16px 9px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none;padding:8px 13px;border-radius:999px;background:var(--surface);border:1px solid var(--line);
+    font-size:12.5px;color:#b7c5d3;white-space:nowrap;
+  }
+  .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+  .sortrow{display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;gap:8px}
+  .sortseg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .sortseg button{padding:6px 10px;border-radius:7px;font-size:11.5px;color:#a4b3c1}
+  .sortseg button[aria-pressed="true"]{background:var(--surface2);color:var(--text);font-weight:600}
+  .count{font-size:11px;color:#7e8f9f}
+
+  .list{flex:1;overflow-y:auto;padding:0 16px 108px;overscroll-behavior:contain}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-bottom:10px;text-align:left;width:100%;display:block;
+    transition:transform .12s ease,border-color .12s ease;
+  }
+  .card:active{transform:scale(.99);border-color:#33465a}
+  .card-top{display:flex;gap:12px;align-items:flex-start}
+  .thumb{
+    width:46px;height:46px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;font-weight:800;letter-spacing:.02em;color:#0b0f14;
+  }
+  .card-main{flex:1;min-width:0}
+  .brandline{font-size:10.5px;color:#8090a0;letter-spacing:.02em}
+  .card-main h3{font-size:15px;margin:2px 0 6px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tagrow{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:10.5px;padding:3px 7px;border-radius:6px;background:rgba(201,247,90,.1);color:#cfe4a8;border:1px solid rgba(201,247,90,.16)}
+  .tag.neutral{background:var(--surface2);color:#a9b8c6;border-color:var(--line)}
+  .score{text-align:right;flex:none}
+  .score b{font-size:17px;letter-spacing:-.02em}
+  .score .st{color:var(--star);font-size:11px;margin-left:2px}
+  .score small{display:block;font-size:10px;color:#7e8f9f;margin-top:3px}
+  .specline{display:flex;gap:10px;margin-top:11px;padding-top:10px;border-top:1px solid #1c2733;font-size:11px;color:#8fa0b0}
+  .specline span b{color:#c7d4e0;font-weight:600}
+
+  .empty{padding:44px 10px;text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+
+  /* ── 광고 배너 ────────────────────────────────── */
+  .adbar{
+    position:absolute;left:0;right:0;bottom:0;z-index:30;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:linear-gradient(rgba(8,11,15,.55),#080b0f 40%);
+    border-top:1px solid #1b2632;
+  }
+  .adslot{
+    display:flex;align-items:center;gap:10px;border:1px dashed #3b4c5e;border-radius:12px;
+    background:repeating-linear-gradient(135deg,#0e151d,#0e151d 10px,#111a23 10px,#111a23 20px);
+    padding:10px 12px;min-height:56px;
+  }
+  .adslot .adlabel{
+    font-size:9px;font-weight:800;letter-spacing:.08em;color:#0b0f14;background:#9db0c2;
+    border-radius:4px;padding:2px 4px;flex:none;
+  }
+  .adslot .adbody{min-width:0}
+  .adslot strong{display:block;font-size:12px;color:#c5d3e0;font-weight:600}
+  .adslot em{display:block;font-style:normal;font-size:10.5px;color:#7e8f9f;margin-top:2px;line-height:1.4}
+  .adslot .size{margin-left:auto;font-size:9.5px;color:#68798a;white-space:nowrap;flex:none}
+  .adinline{margin:16px 0 4px}
+
+  /* ── 상세 시트 ────────────────────────────────── */
+  .sheet{
+    position:absolute;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column;
+    transform:translateY(101%);transition:transform .3s cubic-bezier(.3,.8,.3,1);visibility:hidden;
+  }
+  .sheet.open{transform:translateY(0);visibility:visible}
+  .sheet.write{z-index:50;background:#0b1015}
+  .sheet-head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:14px 14px 10px;border-bottom:1px solid #17212b;flex:none;
+  }
+  .sheet-head .icobtn{
+    width:36px;height:36px;border-radius:11px;background:var(--surface2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;
+  }
+  .sheet-head .title{font-size:13px;color:#b3c1cf;font-weight:600;letter-spacing:.02em}
+  .sheet-body{flex:1;overflow-y:auto;padding:18px 18px 30px}
+  .sheet-foot{
+    flex:none;padding:10px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid #17212b;background:#0a0e13;display:flex;gap:9px;
+  }
+  .sheet-foot .btn{flex:1;padding:14px}
+  .sheet-foot .btn-primary{flex:2}
+
+  .d-head{display:flex;gap:13px;align-items:flex-start}
+  .d-head .thumb{width:56px;height:56px;border-radius:15px}
+  .d-head h2{font-size:20px;margin:2px 0 7px;letter-spacing:-.02em;line-height:1.25}
+  .d-meta{font-size:11px;color:#8595a5}
+  .d-rating{display:flex;align-items:baseline;gap:7px;margin:18px 0 4px}
+  .d-rating b{font-size:34px;letter-spacing:-.03em;line-height:1}
+  .d-rating .st{color:var(--star);font-size:16px}
+  .d-rating span.muted{font-size:11.5px}
+  .bars{display:grid;gap:9px;margin:18px 0 4px}
+  .bar-row{display:grid;grid-template-columns:78px 1fr 30px;gap:9px;align-items:center;font-size:11.5px}
+  .bar-row .lbl{color:#a9b8c6}
+  .bar{height:6px;border-radius:3px;background:#1c2733;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#7de2c3,var(--accent))}
+  .bar-row .val{text-align:right;color:#8fa0b0;font-variant-numeric:tabular-nums}
+
+  .divider{height:1px;background:#17212b;margin:20px 0}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px}
+  .sec-head h3{font-size:13.5px;margin:0;letter-spacing:-.01em}
+  .sec-head span{font-size:11px;color:#7e8f9f}
+  .review{padding:13px 0;border-bottom:1px solid #151f28}
+  .review:last-child{border-bottom:0}
+  .rv-top{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .rv-nick{font-size:12.5px;font-weight:600}
+  .rv-stars{color:#3c4b5a;font-size:11px;letter-spacing:1px}
+  .rv-stars .on{color:var(--star)}
+  .rv-meta{font-size:10.5px;color:#7e8f9f;margin-bottom:6px;line-height:1.5}
+  .rv-text{font-size:13px;line-height:1.6;color:#dbe5ee;margin:0 0 9px;word-break:keep-all}
+  .rv-actions{display:flex;align-items:center;gap:8px}
+  .helpful{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#93a4b5;
+    border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 10px;
+  }
+  .helpful[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:700}
+  .report{margin-left:auto;font-size:10.5px;color:#6f8090;padding:4px 6px}
+  .report:active{color:#a9b8c6}
+  .mine{font-size:9.5px;color:#0b0f14;background:#7de2c3;border-radius:4px;padding:2px 5px;font-weight:800}
+
+  /* ── 리뷰 작성 ────────────────────────────────── */
+  .field{margin-bottom:20px}
+  .field > label{display:block;font-size:12px;color:#a9b8c6;margin-bottom:8px;font-weight:600}
+  .starpick{display:flex;gap:6px}
+  .starpick button{font-size:30px;line-height:1;color:#33424f;padding:2px 3px;transition:transform .1s}
+  .starpick button.on{color:var(--star)}
+  .starpick button:active{transform:scale(.9)}
+  .slider-row{margin-bottom:13px}
+  .slider-top{display:flex;justify-content:space-between;font-size:11.5px;color:#a9b8c6;margin-bottom:6px}
+  .slider-top b{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;
+    background:#243240;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);
+    border:3px solid #0b1015;box-shadow:0 0 0 1px #3b4b2a;cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:var(--accent)}
+  .textinput,textarea,select{
+    width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:12px 13px;font-size:14px;outline:none;
+  }
+  .textinput:focus,textarea:focus,select:focus{border-color:rgba(201,247,90,.5)}
+  textarea{resize:none;line-height:1.6;min-height:84px}
+  .counter{text-align:right;font-size:10.5px;color:#7e8f9f;margin-top:5px}
+  .prefrow{display:flex;flex-wrap:wrap;gap:6px}
+  .pref{
+    padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);
+    font-size:11.5px;color:#a9b8c6;
+  }
+  .pref[aria-pressed="true"]{background:rgba(201,247,90,.14);border-color:rgba(201,247,90,.5);color:#d9f0a8;font-weight:600}
+  .hintbox{font-size:10.5px;line-height:1.6;color:#7e8f9f;background:#0e151d;border:1px solid #1b2632;border-radius:10px;padding:10px 11px;margin-top:16px}
+
+  /* ── 토스트 ──────────────────────────────────── */
+  .toast{
+    position:absolute;left:50%;bottom:96px;transform:translate(-50%,14px);
+    background:#e9f0f7;color:#0b1015;font-size:12.5px;font-weight:600;
+    padding:11px 16px;border-radius:999px;box-shadow:0 12px 30px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:80;
+    max-width:calc(100% - 40px);text-align:center;line-height:1.45;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <!-- ══ 성인 확인 게이트 ══ -->
+  <section class="gate" id="gate" aria-label="성인 확인">
+    <div>
+      <div class="gate-top">
+        <span class="badge-19">19+</span>
+        <span class="proto">PROTOTYPE DEMO</span>
+      </div>
+      <h1>성인 확인이<br>필요합니다</h1>
+      <p>이 서비스는 담배 제품의 정보와 성인 이용자의 후기를 다룹니다.<br>만 19세 미만은 이용할 수 없습니다.</p>
+      <ul class="gate-list">
+        <li><span class="dot"></span><span><b>프로토타입 데모</b>입니다. 지금은 실제 본인인증을 하지 않습니다.</span></li>
+        <li><span class="dot"></span><span>실제 출시 시에는 <b>PASS·휴대폰 본인인증</b> 등 본인확인 수단을 연동해야 합니다.</span></li>
+        <li><span class="dot"></span><span>제품 수치와 리뷰는 <b>화면 구성 예시</b>이며 실제 판매·광고가 아닙니다.</span></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="gate-actions">
+        <button class="btn btn-primary" id="btnAdult">19세 이상입니다</button>
+        <button class="btn btn-ghost" id="btnMinor">19세 미만입니다</button>
+      </div>
+      <div id="minorBlock" class="blocked hidden">
+        만 19세 미만은 이 서비스를 이용할 수 없습니다. 브라우저 창을 닫아 주세요.
+      </div>
+      <p class="gate-foot" style="margin-top:16px">
+        <strong>흡연은 폐암 등 질병의 원인이 되며, 다른 사람의 건강을 위협할 수 있습니다.</strong><br>
+        금연상담전화 1544-9030
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ 메인 앱 ══ -->
+  <div class="app hidden" id="app">
+    <header class="topbar">
+      <div>
+        <h1>담배 리뷰 <span class="badge-19">19+</span></h1>
+        <p class="sub">실제로 피워본 사람들의 솔직한 기록</p>
+      </div>
+      <span class="proto-chip">DEMO</span>
+    </header>
+
+    <div class="notice">
+      프로토타입입니다. 타르·니코틴 수치는 예시값이며, 실제 서비스에서는 제조사 표기와 식약처 공개 자료를 사용합니다.
+    </div>
+
+    <div class="filterblock">
+      <div class="searchwrap">
+        <span class="ico">⌕</span>
+        <input id="search" type="search" placeholder="제품명 · 브랜드 · 태그 검색" autocomplete="off" aria-label="검색">
+      </div>
+      <div class="chips" id="cats" role="group" aria-label="제품 분류">
+        <button class="chip" data-cat="all" aria-pressed="true">전체</button>
+        <button class="chip" data-cat="cig" aria-pressed="false">일반 담배(궐련)</button>
+        <button class="chip" data-cat="stick" aria-pressed="false">전자담배 스틱</button>
+        <button class="chip" data-cat="liquid" aria-pressed="false">액상</button>
+      </div>
+      <div class="sortrow">
+        <div class="sortseg" role="group" aria-label="정렬">
+          <button data-sort="reviews" aria-pressed="true">리뷰 많은 순</button>
+          <button data-sort="rating" aria-pressed="false">별점 높은 순</button>
+        </div>
+        <span class="count" id="resultCount"></span>
+      </div>
+    </div>
+
+    <main class="list" id="list" aria-live="polite"></main>
+  </div>
+
+  <!-- 하단 고정 배너 지면 -->
+  <div class="adbar hidden" id="adbar">
+    <div class="adslot" role="note" aria-label="광고 배너 영역 예시">
+      <span class="adlabel">AD</span>
+      <div class="adbody">
+        <strong>[광고 배너 영역 예시]</strong>
+        <em>메인 하단 고정 · 성인 대상 비담배 제휴 지면</em>
+      </div>
+      <span class="size">320×50</span>
+    </div>
+  </div>
+
+  <!-- ══ 제품 상세 시트 ══ -->
+  <section class="sheet" id="detail" aria-label="제품 상세">
+    <div class="sheet-head">
+      <button class="icobtn" data-close-detail aria-label="뒤로">←</button>
+      <span class="title">제품 상세</span>
+      <button class="icobtn" id="btnShare" aria-label="공유">↗</button>
+    </div>
+    <div class="sheet-body" id="detailBody"></div>
+    <div class="sheet-foot">
+      <button class="btn btn-ghost" id="btnShare2">공유하기</button>
+      <button class="btn btn-primary" id="btnWrite">리뷰 쓰기</button>
+    </div>
+  </section>
+
+  <!-- ══ 리뷰 작성 시트 ══ -->
+  <section class="sheet write" id="write" aria-label="리뷰 작성">
+    <div class="sheet-head">
+      <button class="icobtn" data-close-write aria-label="닫기">✕</button>
+      <span class="title" id="writeTitle">리뷰 쓰기</span>
+      <span style="width:36px"></span>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <label>별점</label>
+        <div class="starpick" id="starPick" role="group" aria-label="별점 선택"></div>
+      </div>
+
+      <div class="field">
+        <label>세부 평가</label>
+        <div id="sliders"></div>
+      </div>
+
+      <div class="field">
+        <label for="nick">닉네임</label>
+        <input class="textinput" id="nick" maxlength="12" placeholder="익명" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="period">흡연 기간</label>
+        <select id="period">
+          <option>1년 미만</option>
+          <option>1~3년</option>
+          <option selected>3~10년</option>
+          <option>10년 이상</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>취향 태그 (선택)</label>
+        <div class="prefrow" id="prefs">
+          <button class="pref" data-pref="연초 선호" aria-pressed="false">연초 선호</button>
+          <button class="pref" data-pref="멘솔 선호" aria-pressed="false">멘솔 선호</button>
+          <button class="pref" data-pref="캡슐 선호" aria-pressed="false">캡슐 선호</button>
+          <button class="pref" data-pref="저타르 선호" aria-pressed="false">저타르 선호</button>
+          <button class="pref" data-pref="타격감 중시" aria-pressed="false">타격감 중시</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rvtext">한줄평</label>
+        <textarea id="rvtext" maxlength="80" placeholder="맛·목넘김·향 등 느낀 점을 적어주세요 (5자 이상)"></textarea>
+        <div class="counter"><span id="counter">0</span>/80</div>
+      </div>
+
+      <div class="hintbox">
+        광고성·비방·구매 유도 문구가 포함된 리뷰는 등록되지 않습니다. 모든 담배는 해롭습니다.
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-primary" id="btnSubmit" style="flex:1">등록하기</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─────────────────────────────────────────────
+     데이터 (프로토타입 시드)
+     ───────────────────────────────────────────── */
+  var CAT_LABEL = { cig: '궐련', stick: '전자담배 스틱', liquid: '액상' };
+  var CAT_COLOR = { cig: '#e0a06a', stick: '#8ad4c2', liquid: '#8fb6f0' };
+
+  var PRODUCTS = [
+    {
+      id: 'marlboro-red', brand: '말보로', name: '말보로 레드', cat: 'cig',
+      tar: '8.0', nic: '0.7', tags: ['타격감', '연초'], color: '#c0563a',
+      reviews: [
+        { id: 'p1r1', nick: '연초10년', meta: '10년 이상 · 연초 선호', stars: 4.5, text: '역시 기준점. 목넘김에 묵직함이 있고 끝맛이 깔끔한 편이라 오래 피게 된다.', hit: 4.5, ice: 1, flavor: 3.5, throat: 4.5, likes: 18 },
+        { id: 'p1r2', nick: '출퇴근러', meta: '3~10년 · 타격감 중시', stars: 4, text: '아침 첫 개비로는 조금 세지만 그만큼 확실하다. 대신 하루 피는 양이 늘어나는 느낌.', hit: 4.5, ice: 1, flavor: 3, throat: 4, likes: 9 },
+        { id: 'p1r3', nick: '초보흡연자', meta: '1년 미만', stars: 3, text: '입문자에게는 확실히 독하다. 반 개비만 피워도 목이 아파서 요즘은 다른 걸 찾는 중.', hit: 5, ice: 1, flavor: 2.5, throat: 4.5, likes: 6 },
+        { id: 'p1r4', nick: '밤산책', meta: '3~10년', stars: 4.5, text: '향이 화려하진 않지만 잡내가 없어서 좋다. 가격이 계속 올라서 그게 유일한 흠.', hit: 4, ice: 1, flavor: 3.5, throat: 4, likes: 4 }
+      ]
+    },
+    {
+      id: 'dunhill-6', brand: '던힐', name: '던힐 6mg', cat: 'cig',
+      tar: '6.0', nic: '0.5', tags: ['부드러움', '연초'], color: '#7c8f6a',
+      reviews: [
+        { id: 'p2r1', nick: '부드러운게좋아', meta: '10년 이상 · 저타르 선호', stars: 4, text: '목이 편해서 하루 종일 피기 좋다. 대신 중간에 슬슬 심심해지는 건 어쩔 수 없다.', hit: 2.5, ice: 1, flavor: 3.5, throat: 2.5, likes: 11 },
+        { id: 'p2r2', nick: '점심시간', meta: '3~10년', stars: 4.5, text: '향이 은은하고 끝에 남는 느낌이 깔끔하다. 손이 자주 가는 무난한 선택.', hit: 2.5, ice: 1, flavor: 4, throat: 3, likes: 7 },
+        { id: 'p2r3', nick: '금연중', meta: '10년 이상 · 연초 선호', stars: 3.5, text: '예전엔 이게 메인이었는데 요즘은 너무 가볍게 느껴진다. 끊는 중이라 다행이지만.', hit: 2, ice: 1, flavor: 3, throat: 2.5, likes: 3 }
+      ]
+    },
+    {
+      id: 'esse-change', brand: '에쎄', name: '에쎄 체인지', cat: 'cig',
+      tar: '4.0', nic: '0.35', tags: ['캡슐', '멘솔'], color: '#4f9f8a',
+      reviews: [
+        { id: 'p3r1', nick: '캡슐러', meta: '3~10년 · 캡슐 선호', stars: 4, text: '캡슐 터뜨리기 전후 맛 차이가 확실하다. 더운 날엔 이거 말고는 잘 안 찾게 된다.', hit: 2, ice: 4.5, flavor: 4, throat: 2, likes: 22 },
+        { id: 'p3r2', nick: '여름만기다림', meta: '1~3년 · 멘솔 선호', stars: 4.5, text: '시원함이 인공적이지 않고 은은해서 좋다. 저타르라 부담도 적은 편.', hit: 1.5, ice: 4.5, flavor: 4, throat: 2, likes: 14 },
+        { id: 'p3r3', nick: '연초파', meta: '10년 이상 · 연초 선호', stars: 2.5, text: '멘솔은 취향이 아니라서 잘 모르겠다. 캡슐 안 터뜨리면 그냥 가벼운 담배.', hit: 1.5, ice: 2, flavor: 3, throat: 1.5, likes: 2 },
+        { id: 'p3r4', nick: '하루두갑', meta: '3~10년', stars: 4, text: '가볍지만 향이 계속 남아서 손이 간다. 대신 금방 타서 개비 수가 늘어난다.', hit: 2, ice: 4, flavor: 4.5, throat: 2, likes: 8 },
+        { id: 'p3r5', nick: '첫담배', meta: '1년 미만', stars: 4.5, text: '처음 피운 게 이거라 그런지 다른 담배는 아직 어렵다. 시원하고 목이 덜 아프다.', hit: 1, ice: 5, flavor: 4, throat: 1.5, likes: 5 },
+        { id: 'p3r6', nick: '리뷰쓰는중', meta: '1~3년', stars: 3.5, text: '캡슐 두 번 터지는 제품이랑 비교하면 향이 단순한 편. 무난하게 피기엔 좋다.', hit: 1.5, ice: 4, flavor: 3.5, throat: 2, likes: 1 }
+      ]
+    },
+    {
+      id: 'raison-french-black', brand: '레종', name: '레종 프렌치 블랙', cat: 'cig',
+      tar: '6.0', nic: '0.5', tags: ['향/풍미', '부드러움'], color: '#6b5b93',
+      reviews: [
+        { id: 'p4r1', nick: '향담배러', meta: '10년 이상 · 연초 선호', stars: 4.5, text: '달콤한 향이 확실히 난다. 호불호는 갈리지만 나는 이 향 때문에 계속 피는 중.', hit: 2.5, ice: 1, flavor: 5, throat: 2.5, likes: 19 },
+        { id: 'p4r2', nick: '커피랑', meta: '3~10년', stars: 4, text: '커피랑 같이 피면 향이 살아난다. 단독으로 피면 조금 인공적인 느낌도 있다.', hit: 2.5, ice: 1, flavor: 4.5, throat: 2.5, likes: 10 },
+        { id: 'p4r3', nick: '무향좋아', meta: '3~10년 · 연초 선호', stars: 3, text: '향이 강해서 하루에 두 개비 이상은 부담스럽다. 가끔 생각날 때만 피는 편.', hit: 2.5, ice: 1, flavor: 4, throat: 2, likes: 4 },
+        { id: 'p4r4', nick: '익명', meta: '1~3년', stars: 4.5, text: '목넘김이 부드럽고 향이 오래 남는다. 처음 향담배 시작할 때 추천할 만하다.', hit: 2, ice: 1, flavor: 5, throat: 2, likes: 6 },
+        { id: 'p4r5', nick: '한갑이틀', meta: '10년 이상', stars: 3.5, text: '향은 좋은데 뒤끝이 좀 남는다. 결국 다시 연초로 돌아가게 되더라.', hit: 2.5, ice: 1, flavor: 4, throat: 2.5, likes: 2 }
+      ]
+    },
+    {
+      id: 'bohem-mocha', brand: '보헤미안', name: '보헤미안 모카', cat: 'cig',
+      tar: '6.0', nic: '0.5', tags: ['향/풍미', '달콤'], color: '#8a6242',
+      reviews: [
+        { id: 'p5r1', nick: '시가초보', meta: '1~3년 · 연초 선호', stars: 4.5, text: '커피·초콜릿 향이 진해서 디저트처럼 피게 된다. 시가 특유의 무거움은 덜하다.', hit: 3, ice: 1, flavor: 5, throat: 3, likes: 13 },
+        { id: 'p5r2', nick: '밤에한대', meta: '10년 이상', stars: 4, text: '향이 좋아서 가끔 특별하게 피고 싶을 때 찾는다. 매일 피기엔 조금 부담스럽다.', hit: 3, ice: 1, flavor: 4.5, throat: 3, likes: 9 },
+        { id: 'p5r3', nick: '단거싫어', meta: '3~10년', stars: 2.5, text: '향이 너무 달아서 나는 한 개비로 충분했다. 취향 차이가 큰 제품.', hit: 3, ice: 1, flavor: 4, throat: 3, likes: 3 },
+        { id: 'p5r4', nick: '동네편의점', meta: '3~10년', stars: 4, text: '연기가 부드럽고 향이 오래 남는다. 다만 주변에서 냄새 지적을 받을 수 있다.', hit: 3, ice: 1, flavor: 4.5, throat: 3, likes: 5 }
+      ]
+    },
+    {
+      id: 'the-one', brand: '디스', name: '더원', cat: 'cig',
+      tar: '5.0', nic: '0.4', tags: ['부드러움', '저타르'], color: '#5b7f9c',
+      reviews: [
+        { id: 'p6r1', nick: '라이트파', meta: '10년 이상 · 저타르 선호', stars: 4, text: '가격 대비 무난하다. 목이 편하고 향이 튀지 않아 사무실 앞에서 피기 좋다.', hit: 2, ice: 1, flavor: 3, throat: 2.5, likes: 7 },
+        { id: 'p6r2', nick: '가성비찾는중', meta: '3~10년', stars: 4.5, text: '이 가격에 이 정도면 충분하다. 다만 끝맛이 조금 퍽퍽한 느낌은 있다.', hit: 2.5, ice: 1, flavor: 3, throat: 2.5, likes: 6 },
+        { id: 'p6r3', nick: '연초3년', meta: '1~3년', stars: 3.5, text: '무난하지만 기억에 남는 맛은 아니다. 매일 피기엔 나쁘지 않다.', hit: 2, ice: 1, flavor: 2.5, throat: 2, likes: 2 }
+      ]
+    },
+    {
+      id: 'terea-blue', brand: '아이코스', name: '테리아 블루', cat: 'stick',
+      tar: '—', nic: '0.5', tags: ['담배향', '부드러움'], color: '#3f7bc4',
+      reviews: [
+        { id: 'p7r1', nick: '스틱5년', meta: '3~10년 · 연초 선호', stars: 4.5, text: '궐련보다 냄새가 덜 남아서 집에서도 부담이 적다. 향은 연초에 가깝다.', hit: 3.5, ice: 1.5, flavor: 4, throat: 3.5, likes: 26 },
+        { id: 'p7r2', nick: '실내흡연러', meta: '3~10년', stars: 4, text: '기기 값이 아깝지 않을 정도로 손이 간다. 다만 스틱 값이 계속 오르는 게 문제.', hit: 3, ice: 1, flavor: 3.5, throat: 3, likes: 15 },
+        { id: 'p7r3', nick: '궐련병행', meta: '10년 이상', stars: 3.5, text: '궐련만큼의 타격감은 없다. 대신 냄새·재 처리 때문에 실내에서는 이걸 쓴다.', hit: 2.5, ice: 1, flavor: 3.5, throat: 2.5, likes: 8 },
+        { id: 'p7r4', nick: '기기처음', meta: '1년 미만', stars: 4.5, text: '예열만 기다리면 바로 피울 수 있어서 편하다. 목넘김이 궐련보다 부드럽다.', hit: 2.5, ice: 2, flavor: 4, throat: 2.5, likes: 5 },
+        { id: 'p7r5', nick: '향민감', meta: '1~3년', stars: 3, text: '블루가 가장 무난하다고 해서 샀는데, 나는 조금 비린 느낌이 있었다.', hit: 3, ice: 1.5, flavor: 3, throat: 3, likes: 1 }
+      ]
+    },
+    {
+      id: 'fit-change', brand: '릴', name: '핏 체인지', cat: 'stick',
+      tar: '—', nic: '0.5', tags: ['캡슐', '멘솔'], color: '#49a08c',
+      reviews: [
+        { id: 'p8r1', nick: '릴유저', meta: '1~3년 · 캡슐 선호', stars: 4, text: '캡슐 터뜨리면 시원함이 확 올라온다. 기기 적응되면 궐련보다 편하다.', hit: 2.5, ice: 4.5, flavor: 4, throat: 2.5, likes: 12 },
+        { id: 'p8r2', nick: '겨울에도멘솔', meta: '3~10년 · 멘솔 선호', stars: 4.5, text: '시원한 맛이 인공적이지 않아 좋다. 스틱 보관만 조금 신경 쓰면 된다.', hit: 2, ice: 4.5, flavor: 4, throat: 2, likes: 9 },
+        { id: 'p8r3', nick: '연초로복귀', meta: '10년 이상', stars: 3, text: '편하긴 한데 뭔가 아쉽다. 결국 궐련 한 갑을 같이 사게 되더라.', hit: 3, ice: 3, flavor: 3, throat: 3, likes: 3 },
+        { id: 'p8r4', nick: '익명', meta: '1년 미만', stars: 4, text: '처음엔 연기가 적어서 어색했는데 금방 익숙해졌다. 냄새가 덜 나서 좋다.', hit: 2, ice: 4, flavor: 3.5, throat: 2, likes: 2 }
+      ]
+    },
+    {
+      id: 'lil-vapor-tobacco', brand: '릴', name: '릴 베이퍼 1.0 · 타바코', cat: 'liquid',
+      tar: '—', nic: '1.0%', tags: ['타바코', '목넘김'], color: '#a06a3c',
+      reviews: [
+        { id: 'p9r1', nick: '액상2년', meta: '1~3년 · 연초 선호', stars: 4, text: '액상인데도 연초 느낌이 꽤 난다. 목넘김이 부드럽고 단맛이 과하지 않다.', hit: 2.5, ice: 1, flavor: 4, throat: 2.5, likes: 10 },
+        { id: 'p9r2', nick: '냄새민감', meta: '3~10년', stars: 4.5, text: '실내에서 피워도 냄새가 금방 빠진다. 가족 눈치 덜 보게 된 게 제일 크다.', hit: 2, ice: 1, flavor: 4, throat: 2, likes: 14 },
+        { id: 'p9r3', nick: '궐련10년', meta: '10년 이상', stars: 3, text: '편하긴 한데 타격감이 아쉽다. 액상은 아무래도 대체재 느낌을 지우기 어렵다.', hit: 1.5, ice: 1, flavor: 3.5, throat: 2, likes: 4 }
+      ]
+    },
+    {
+      id: 'lil-vapor-mint', brand: '릴', name: '릴 베이퍼 1.0 · 민트', cat: 'liquid',
+      tar: '—', nic: '1.0%', tags: ['멘솔', '시원함'], color: '#3f9f9a',
+      reviews: [
+        { id: 'p10r1', nick: '멘솔만골라', meta: '3~10년 · 멘솔 선호', stars: 4.5, text: '시원함이 오래가고 끝맛이 깔끔하다. 여름에는 이것만 피게 된다.', hit: 1.5, ice: 5, flavor: 4, throat: 2, likes: 11 },
+        { id: 'p10r2', nick: '첫액상', meta: '1년 미만', stars: 4, text: '연기 대신 증기라 어색했지만 금방 적응했다. 민트 향이 세지 않아 좋다.', hit: 1.5, ice: 4.5, flavor: 3.5, throat: 1.5, likes: 6 },
+        { id: 'p10r3', nick: '가벼운게좋아', meta: '1~3년', stars: 3.5, text: '무난하게 시원하다. 다만 하루 종일 피면 입안이 좀 텁텁해진다.', hit: 1.5, ice: 4, flavor: 3.5, throat: 1.5, likes: 2 }
+      ]
+    }
+  ];
+
+  /* ─────────────────────────────────────────────
+     저장소
+     ───────────────────────────────────────────── */
+  var KEY = 'tobaccoReviewProto.v1';
+  var store = { userReviews: {}, likes: {} };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.userReviews) store.userReviews = parsed.userReviews;
+        if (parsed.likes) store.likes = parsed.likes;
+      }
+    }
+  } catch (e) { /* 저장소를 못 쓰면 메모리만 사용 */ }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* 무시 */ }
+  }
+
+  /* ─────────────────────────────────────────────
+     유틸
+     ───────────────────────────────────────────── */
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function byId(id) {
+    for (var i = 0; i < PRODUCTS.length; i++) if (PRODUCTS[i].id === id) return PRODUCTS[i];
+    return null;
+  }
+  function reviewsOf(p) {
+    return p.reviews.concat(store.userReviews[p.id] || []);
+  }
+  function avgStars(p) {
+    var list = reviewsOf(p);
+    if (!list.length) return 0;
+    var sum = 0;
+    for (var i = 0; i < list.length; i++) sum += Number(list[i].stars) || 0;
+    return sum / list.length;
+  }
+  function avgBar(p, key) {
+    var list = reviewsOf(p);
+    if (!list.length) return 0;
+    var sum = 0;
+    for (var i = 0; i < list.length; i++) sum += Number(list[i][key]) || 0;
+    return sum / list.length;
+  }
+  function likeCount(p, rv) {
+    var k = p.id + ':' + rv.id;
+    return (Number(rv.likes) || 0) + (store.likes[k] ? 1 : 0);
+  }
+  function fmt1(n) { return (Math.round(n * 10) / 10).toFixed(1); }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2200);
+  }
+
+  function starsHtml(v) {
+    var filled = Math.round(v);
+    var out = '';
+    for (var i = 1; i <= 5; i++) out += '<span class="' + (i <= filled ? 'on' : '') + '">★</span>';
+    return out;
+  }
+
+  /* ─────────────────────────────────────────────
+     상태
+     ───────────────────────────────────────────── */
+  var state = { q: '', cat: 'all', sort: 'reviews', current: null };
+  var draft = { stars: 0, prefs: [] };
+
+  /* ─────────────────────────────────────────────
+     목록 렌더
+     ───────────────────────────────────────────── */
+  function filtered() {
+    var q = state.q.trim().toLowerCase();
+    var out = PRODUCTS.filter(function (p) {
+      if (state.cat !== 'all' && p.cat !== state.cat) return false;
+      if (!q) return true;
+      var hay = (p.name + ' ' + p.brand + ' ' + p.tags.join(' ') + ' ' + CAT_LABEL[p.cat]).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    out.sort(function (a, b) {
+      var d;
+      if (state.sort === 'rating') {
+        d = avgStars(b) - avgStars(a);
+        if (Math.abs(d) > 0.001) return d;
+        return reviewsOf(b).length - reviewsOf(a).length;
+      }
+      d = reviewsOf(b).length - reviewsOf(a).length;
+      if (d !== 0) return d;
+      return avgStars(b) - avgStars(a);
+    });
+    return out;
+  }
+
+  function renderList() {
+    var items = filtered();
+    var list = $('#list');
+    $('#resultCount').textContent = items.length + '개 제품';
+
+    if (!items.length) {
+      list.innerHTML = '<div class="empty">검색 결과가 없습니다.<br>다른 제품명이나 태그로 찾아보세요.</div>';
+      return;
+    }
+
+    list.innerHTML = items.map(function (p) {
+      var avg = avgStars(p);
+      var n = reviewsOf(p).length;
+      var tags = p.tags.map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('');
+      var spec = p.cat === 'liquid' ? ('니코틴 <b>' + esc(p.nic) + '</b>') : ('타르 <b>' + esc(p.tar) + 'mg</b>');
+      var spec2 = p.cat === 'liquid' ? '액상' : ('니코틴 <b>' + esc(p.nic) + 'mg</b>');
+      return '' +
+        '<button class="card" data-open="' + p.id + '" aria-label="' + esc(p.name) + ' 상세 보기">' +
+          '<div class="card-top">' +
+            '<div class="thumb" style="background:linear-gradient(145deg,' + p.color + ',' + p.color + '99)">' + CAT_LABEL[p.cat].replace('전자담배 ', '') + '</div>' +
+            '<div class="card-main">' +
+              '<div class="brandline">' + esc(p.brand) + '</div>' +
+              '<h3>' + esc(p.name) + '</h3>' +
+              '<div class="tagrow">' + tags + '<span class="tag neutral">' + CAT_LABEL[p.cat] + '</span></div>' +
+            '</div>' +
+            '<div class="score"><b>' + fmt1(avg) + '</b><span class="st">★</span><small>리뷰 ' + n + '</small></div>' +
+          '</div>' +
+          '<div class="specline"><span>' + spec + '</span><span>' + spec2 + '</span></div>' +
+        '</button>';
+    }).join('');
+  }
+
+  /* ─────────────────────────────────────────────
+     상세 렌더
+     ───────────────────────────────────────────── */
+  function renderDetail() {
+    var p = state.current;
+    if (!p) return;
+    var avg = avgStars(p);
+    var list = reviewsOf(p);
+
+    var bars = [
+      { k: 'hit', label: '타격감' },
+      { k: 'ice', label: '멘솔·시원함' },
+      { k: 'flavor', label: '향·풍미' },
+      { k: 'throat', label: '목넘김' }
+    ].map(function (b) {
+      var v = avgBar(p, b.k);
+      return '<div class="bar-row"><span class="lbl">' + b.label + '</span>' +
+        '<span class="bar"><i style="width:' + (v / 5 * 100) + '%"></i></span>' +
+        '<span class="val">' + fmt1(v) + '</span></div>';
+    }).join('');
+
+    var rv = list.map(function (r) {
+      var k = p.id + ':' + r.id;
+      var voted = !!store.likes[k];
+      return '<article class="review">' +
+        '<div class="rv-top">' +
+          '<span class="rv-nick">' + esc(r.nick || '익명') + '</span>' +
+          (r.mine ? '<span class="mine">내 리뷰</span>' : '') +
+          '<span class="rv-stars" aria-label="별점 ' + r.stars + '">' + starsHtml(r.stars) + '</span>' +
+        '</div>' +
+        '<div class="rv-meta">' + esc(r.meta || '') + '</div>' +
+        '<p class="rv-text">' + esc(r.text) + '</p>' +
+        '<div class="rv-actions">' +
+          '<button class="helpful" data-like="' + p.id + '|' + r.id + '" aria-pressed="' + (voted ? 'true' : 'false') + '">' +
+            '도움돼요 <span>' + likeCount(p, r) + '</span>' +
+          '</button>' +
+          '<button class="report" data-report="' + p.id + '|' + r.id + '" aria-label="이 리뷰 신고">신고</button>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+
+    var specText = p.cat === 'liquid'
+      ? '니코틴 <b>' + esc(p.nic) + '</b>'
+      : '타르 <b>' + esc(p.tar) + 'mg</b> · 니코틴 <b>' + esc(p.nic) + 'mg</b>';
+
+    $('#detailBody').innerHTML = '' +
+      '<div class="d-head">' +
+        '<div class="thumb" style="background:linear-gradient(145deg,' + p.color + ',' + p.color + '99)">' + CAT_LABEL[p.cat].replace('전자담배 ', '') + '</div>' +
+        '<div><div class="brandline">' + esc(p.brand) + '</div>' +
+          '<h2>' + esc(p.name) + '</h2>' +
+          '<div class="d-meta">' + CAT_LABEL[p.cat] + ' · ' + specText + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="d-rating"><b>' + fmt1(avg) + '</b><span class="st">★</span><span class="muted">리뷰 ' + list.length + '개</span></div>' +
+      '<div class="tagrow" style="margin-top:8px">' + p.tags.map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
+
+      '<div class="bars">' + bars + '</div>' +
+
+      '<div class="adslot adinline" role="note" aria-label="광고 배너 영역 예시">' +
+        '<span class="adlabel">AD</span>' +
+        '<div class="adbody"><strong>[광고 배너 영역 예시]</strong><em>제품 상세 진입 시 노출 · 성인 대상 비담배 제휴 지면</em></div>' +
+        '<span class="size">300×100</span>' +
+      '</div>' +
+
+      '<div class="divider"></div>' +
+      '<div class="sec-head"><h3>이용자 리뷰</h3><span>최신 등록순</span></div>' +
+      (rv || '<div class="empty" style="padding:26px 0">아직 리뷰가 없습니다. 첫 리뷰를 남겨보세요.</div>') +
+
+      '<div class="hintbox">' +
+        '모든 담배는 해롭습니다. 타르·니코틴 수치는 흡연 습관에 따라 달라질 수 있으며, 낮은 수치가 덜 해롭다는 뜻은 아닙니다.<br>' +
+        '금연상담전화 1544-9030' +
+      '</div>';
+  }
+
+  /* ─────────────────────────────────────────────
+     화면 전환
+     ───────────────────────────────────────────── */
+  function openList() {
+    renderList();
+  }
+  function openDetail(id) {
+    var p = byId(id);
+    if (!p) return;
+    state.current = p;
+    renderDetail();
+    $('#detail').classList.add('open');
+  }
+  function closeDetail() {
+    $('#detail').classList.remove('open');
+    state.current = null;
+  }
+
+  /* ─────────────────────────────────────────────
+     리뷰 작성
+     ───────────────────────────────────────────── */
+  function buildStarPicker() {
+    var html = '';
+    for (var i = 1; i <= 5; i++) {
+      html += '<button data-star="' + i + '" aria-label="별점 ' + i + '점" aria-pressed="false">★</button>';
+    }
+    $('#starPick').innerHTML = html;
+  }
+  function buildSliders() {
+    var defs = [
+      { k: 'hit', label: '타격감' },
+      { k: 'ice', label: '멘솔·시원함' },
+      { k: 'flavor', label: '향·풍미' },
+      { k: 'throat', label: '목넘김' }
+    ];
+    $('#sliders').innerHTML = defs.map(function (d) {
+      return '<div class="slider-row">' +
+        '<div class="slider-top"><span>' + d.label + '</span><b id="v-' + d.k + '">3.0</b></div>' +
+        '<input type="range" min="1" max="5" step="0.5" value="3" data-slider="' + d.k + '" aria-label="' + d.label + '">' +
+      '</div>';
+    }).join('');
+  }
+  function openWrite() {
+    if (!state.current) return;
+    draft.stars = 0;
+    draft.prefs = [];
+    $('#writeTitle').textContent = state.current.name + ' 리뷰';
+    $$('#starPick button').forEach(function (b) { b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); });
+    $$('#sliders input[type=range]').forEach(function (input) {
+      input.value = '3';
+      var label = $('#v-' + input.getAttribute('data-slider'));
+      if (label) label.textContent = '3.0';
+    });
+    $$('#prefs .pref').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+    $('#nick').value = '';
+    $('#rvtext').value = '';
+    $('#counter').textContent = '0';
+    $('#period').selectedIndex = 2;
+    $('#write').classList.add('open');
+  }
+  function closeWrite() {
+    $('#write').classList.remove('open');
+  }
+
+  function submitReview() {
+    var p = state.current;
+    if (!p) return;
+    var text = $('#rvtext').value.trim();
+    if (!draft.stars) { toast('별점을 선택해 주세요.'); return; }
+    if (text.length < 5) { toast('한줄평을 5자 이상 적어주세요.'); return; }
+
+    var banned = /(구매|판매|할인|쿠폰|텔레그램|오픈채팅|연락처|문의)/;
+    if (banned.test(text)) { toast('구매 유도·광고성 문구가 포함되어 등록할 수 없습니다.'); return; }
+
+    var detailed = {};
+    $$('#sliders input[type=range]').forEach(function (input) {
+      detailed[input.getAttribute('data-slider')] = Number(input.value);
+    });
+
+    var nick = $('#nick').value.trim() || '익명';
+    var period = $('#period').value;
+    var meta = period + (draft.prefs.length ? ' · ' + draft.prefs.join(', ') : '');
+
+    var review = {
+      id: 'u' + Date.now(),
+      nick: nick,
+      meta: meta,
+      stars: draft.stars,
+      text: text,
+      hit: detailed.hit,
+      ice: detailed.ice,
+      flavor: detailed.flavor,
+      throat: detailed.throat,
+      likes: 0,
+      mine: true
+    };
+
+    if (!store.userReviews[p.id]) store.userReviews[p.id] = [];
+    store.userReviews[p.id].unshift(review);
+    save();
+
+    closeWrite();
+    renderDetail();
+    renderList();
+    toast('리뷰가 등록되었습니다.');
+  }
+
+  /* ─────────────────────────────────────────────
+     공유
+     ───────────────────────────────────────────── */
+  function shareCurrent() {
+    var p = state.current;
+    if (!p) return;
+    var list = reviewsOf(p);
+    var first = list[0] ? list[0].text : '';
+    var text = '[담배 리뷰] ' + p.brand + ' ' + p.name +
+      ' · ★' + fmt1(avgStars(p)) + ' (리뷰 ' + list.length + '개)\n' +
+      (p.cat === 'liquid' ? '니코틴 ' + p.nic : '타르 ' + p.tar + 'mg / 니코틴 ' + p.nic + 'mg') + '\n' +
+      (first ? '"' + first + '"\n' : '') +
+      'https://example.com/tobacco-review/' + p.id;
+
+    function done() { toast('리뷰 요약과 링크를 복사했어요.'); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) {
+        toast('공유 문구를 만들었어요: ' + p.name + ' ★' + fmt1(avgStars(p)));
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     이벤트
+     ───────────────────────────────────────────── */
+  $('#btnAdult').addEventListener('click', function () {
+    $('#gate').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    $('#adbar').classList.remove('hidden');
+    renderList();
+  });
+
+  $('#btnMinor').addEventListener('click', function () {
+    $('#minorBlock').classList.remove('hidden');
+    toast('만 19세 미만은 이용할 수 없습니다.');
+  });
+
+  $('#search').addEventListener('input', function (e) {
+    state.q = e.target.value;
+    renderList();
+  });
+
+  $('#cats').addEventListener('click', function (e) {
+    var btn = e.target.closest('.chip');
+    if (!btn) return;
+    state.cat = btn.getAttribute('data-cat');
+    $$('#cats .chip').forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+    renderList();
+  });
+
+  $$('.sortseg button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.sort = btn.getAttribute('data-sort');
+      $$('.sortseg button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+      renderList();
+    });
+  });
+
+  $('#list').addEventListener('click', function (e) {
+    var card = e.target.closest('[data-open]');
+    if (!card) return;
+    openDetail(card.getAttribute('data-open'));
+  });
+
+  $('#detailBody').addEventListener('click', function (e) {
+    var rep = e.target.closest('[data-report]');
+    if (rep) {
+      toast('신고가 접수되었습니다. 운영팀 검토 후 처리됩니다.');
+      return;
+    }
+    var btn = e.target.closest('[data-like]');
+    if (!btn) return;
+    var parts = btn.getAttribute('data-like').split('|');
+    var pid = parts[0];
+    var rid = parts[1];
+    var p = byId(pid);
+    if (!p) return;
+    var k = pid + ':' + rid;
+    var rv = null;
+    var all = reviewsOf(p);
+    for (var i = 0; i < all.length; i++) if (all[i].id === rid) rv = all[i];
+    if (!rv) return;
+
+    if (store.likes[k]) { delete store.likes[k]; } else { store.likes[k] = true; }
+    save();
+    renderDetail();
+  });
+
+  $$('[data-close-detail]').forEach(function (b) { b.addEventListener('click', closeDetail); });
+  $$('[data-close-write]').forEach(function (b) { b.addEventListener('click', closeWrite); });
+  $('#btnWrite').addEventListener('click', openWrite);
+  $('#btnShare').addEventListener('click', shareCurrent);
+  $('#btnShare2').addEventListener('click', shareCurrent);
+  $('#btnSubmit').addEventListener('click', submitReview);
+
+  $('#starPick').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-star]');
+    if (!btn) return;
+    draft.stars = Number(btn.getAttribute('data-star'));
+    $$('#starPick button').forEach(function (b) {
+      var on = Number(b.getAttribute('data-star')) <= draft.stars;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(b === btn));
+    });
+  });
+
+  $('#sliders').addEventListener('input', function (e) {
+    var input = e.target;
+    if (!input || input.type !== 'range') return;
+    var label = $('#v-' + input.getAttribute('data-slider'));
+    if (label) label.textContent = Number(input.value).toFixed(1);
+  });
+
+  $('#prefs').addEventListener('click', function (e) {
+    var btn = e.target.closest('.pref');
+    if (!btn) return;
+    var name = btn.getAttribute('data-pref');
+    var idx = draft.prefs.indexOf(name);
+    if (idx === -1) { draft.prefs.push(name); btn.setAttribute('aria-pressed', 'true'); }
+    else { draft.prefs.splice(idx, 1); btn.setAttribute('aria-pressed', 'false'); }
+  });
+
+  $('#rvtext').addEventListener('input', function (e) {
+    $('#counter').textContent = e.target.value.length;
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if ($('#write').classList.contains('open')) { closeWrite(); return; }
+    if ($('#detail').classList.contains('open')) { closeDetail(); }
+  });
+
+  /* ─────────────────────────────────────────────
+     초기화
+     ───────────────────────────────────────────── */
+  buildStarPicker();
+  buildSliders();
+})();
+</script>
+</body>
+</html>
